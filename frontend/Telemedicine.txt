@@ -1,0 +1,169 @@
+/telemedicinesetup.md
+# Telemedicine Feature Setup Guide
+
+This guide will help you set up the telemedicine feature using **free external APIs**: Agora.io for video/audio and Socket.io for chat.
+
+## Prerequisites
+
+1. Node.js installed
+2. MongoDB database
+3. Free Agora.io account
+
+## Step 1: Get Free Agora.io Credentials
+
+1. Go to [https://console.agora.io/](https://console.agora.io/)
+2. Sign up for a free account
+3. Create a new project
+4. Copy your **App ID** and **App Certificate**
+5. Add them to your `.env` file in `MediAi-server`:
+
+```env
+AGORA_APP_ID=a8962de082c24eb08327444d747ea7b6
+AGORA_APP_CERTIFICATE=b6ee7fe879944b8889e712e6853a09b0
+```
+
+**Free Tier Limits:**
+- 10,000 minutes per month
+- Up to 10,000 concurrent users
+- Perfect for development and small-scale production
+
+## Step 2: Install Dependencies
+
+Dependencies are already installed, but if you need to reinstall:
+
+```bash
+# Frontend
+cd MediAI
+npm install agora-rtc-sdk-ng socket.io-client
+
+# Backend
+cd MediAi-server
+npm install socket.io agora-access-token
+```
+
+## Step 3: Configure Backend
+
+The backend is already configured with:
+- Socket.io server for real-time chat
+- Agora token generation endpoint
+- Consultation management endpoints
+
+Make sure your `.env` file in `MediAi-server` has:
+
+```env
+DB_USER=your_mongodb_username
+DB_PASS=your_mongodb_password
+ACCESS_TOKEN_SECRET=your_jwt_secret
+AGORA_APP_ID=your_agora_app_id
+AGORA_APP_CERTIFICATE=your_agora_app_certificate
+PORT=5000
+```
+
+## Step 4: Start the Servers
+
+```bash
+# Terminal 1 - Backend
+cd MediAi-server
+npm start
+
+# Terminal 2 - Frontend
+cd MediAI
+npm run dev
+```
+
+## Step 5: Test the Feature
+
+1. **Create an appointment** with `consultationType: "online"` in the database
+2. **As a doctor**: Go to Doctor Dashboard → Click "Start Consultation" for online appointments
+3. **As a patient**: Go to Patient Dashboard → Click "Join Consultation" for online appointments
+4. The consultation interface will open with:
+   - Real-time video/audio (Agora.io)
+   - Real-time chat (Socket.io)
+   - Prescription form (doctor only)
+   - Patient profile view
+
+## Features Implemented
+
+### Doctor Features:
+- ✅ Start consultation (with time validation)
+- ✅ Real-time video/audio communication
+- ✅ Mute/unmute audio, enable/disable camera
+- ✅ Screen sharing
+- ✅ In-call chat
+- ✅ Prescription form (medications, instructions, follow-up)
+- ✅ End consultation with outcome (Completed/Needs Follow-up)
+- ✅ View patient profile
+
+### Patient Features:
+- ✅ Pre-call checklist (camera, microphone, connection test)
+- ✅ Join consultation (with time validation)
+- ✅ Real-time video/audio communication
+- ✅ Mute/unmute audio, enable/disable camera
+- ✅ In-call chat
+- ✅ View/download prescription
+- ✅ Rate consultation (1-5 stars with comment)
+- ✅ View consultation history
+- ✅ View doctor profile
+
+## API Endpoints
+
+### Consultation Management:
+- `POST /consultation/generate-token` - Generate session token
+- `GET /consultation/:appointmentId/status` - Check consultation status
+- `POST /consultation/:consultationId/end` - End consultation
+- `POST /consultation/:consultationId/prescription` - Create/update prescription
+- `GET /consultation/:consultationId/prescription` - Get prescription
+- `GET /consultation/history/patient` - Get patient consultation history
+- `POST /consultation/:consultationId/rating` - Submit rating
+
+### Agora Token:
+- `POST /consultation/agora-token` - Generate Agora RTC token
+
+### Socket.io Events:
+- `join-consultation` - Join a consultation room
+- `send-message` - Send chat message
+- `receive-message` - Receive chat message
+- `user-joined` - User joined notification
+- `user-left` - User left notification
+- `leave-consultation` - Leave consultation room
+
+## Troubleshooting
+
+### Video not working:
+1. Check browser permissions for camera/microphone
+2. Verify Agora credentials in `.env`
+3. Check browser console for errors
+4. Ensure HTTPS in production (Agora requires HTTPS for production)
+
+### Chat not working:
+1. Check Socket.io connection in browser console
+2. Verify backend server is running
+3. Check CORS settings
+
+### "Not consultation time yet":
+- Consultations can only be started 15 minutes before the scheduled time
+- Check appointment date/time in database
+
+## Production Considerations
+
+1. **HTTPS Required**: Agora.io requires HTTPS in production
+2. **Token Security**: Agora tokens expire after 24 hours (configurable)
+3. **Scalability**: Socket.io can be scaled using Redis adapter
+4. **Monitoring**: Set up monitoring for Agora usage to stay within free tier
+
+## Free Tier Limits
+
+### Agora.io:
+- 10,000 minutes/month
+- Sufficient for ~333 hours of video calls/month
+
+### Socket.io:
+- Self-hosted (unlimited)
+- No restrictions
+
+## Support
+
+For issues:
+- Agora.io: [https://docs.agora.io/](https://docs.agora.io/)
+- Socket.io: [https://socket.io/docs/](https://socket.io/docs/)
+
